@@ -92,6 +92,7 @@ let stack = new Uint16Array(16);
 let stackPointer = 0;
 let keyStatus = new Uint8Array(16);
 let romCode = null;
+let wideRom = null;
 let parsableRom = null;
 let keysPressed = {
   "1": false,
@@ -132,10 +133,11 @@ let keyMap = {
 };
 
 async function getRom() {
-  const response = await fetch("assets/pong.rom");
+  const response = await fetch(
+    "https://cdn.glitch.com/1749964c-1292-4b7b-9396-0fb906858f51%2FChip8%20emulator%20Logo%20%5BGarstyciuks%5D.ch8?v=1590012730017"
+  );
   const blob = await response.blob();
-  romCode = await new Response(blob).arrayBuffer();
-  romCode = new Uint8Array(romCode);
+  return await new Response(blob).arrayBuffer();
 }
 
 function checkIsKeyPresses(key) {
@@ -195,7 +197,9 @@ function initialize() {
 
 function emulateCycle() {
   // Fetch opcode
-  opcode = fetchOpcode();
+  let opcode = fetchOpcode();
+  let wideOpcode = wideRom[programCounter/2];
+  console.log(`Actual code ${wideOpcode} : constructed ${opcode}`);
 
   // Decode opcode
   switch (opcode & 0xf000) {
@@ -267,7 +271,8 @@ function emulateCycle() {
         }
       }
       break;
-    case 0xa000: { // ANNN: Sets I to the address NNN
+    case 0xa000: {
+      // ANNN: Sets I to the address NNN
       // Execute opcode
       indexRegister = opcode & 0x0fff;
       programCounter += 2;
@@ -285,16 +290,19 @@ function emulateCycle() {
         programCounter += 2;
       }
       break;
-    case 0x2000: { // 2NNN: Execute subroutine starting at address NNN
+    case 0x2000: {
+      // 2NNN: Execute subroutine starting at address NNN
       stack[stackPointer] = programCounter;
       stackPointer++;
       programCounter = opcode & 0x0fff;
-      break;
     }
-    case 0x6000: { // 6XNN: Store number NN in register VX
+      break;
+    case 0x6000: {
+      // 6XNN: Store number NN in register VX
       Vregisters[opcode & (0x0f00 >> 8)] = opcode & 0x00ff;
       programCounter += 2;
     }
+      break;
     case 0x8000: // registry ops
       {
         switch (opcode & 0x000f) {
@@ -417,13 +425,14 @@ function emulateCycle() {
         for (let i = 0; i < numBytesOfData; i++) {
           for (let j = 0; j < 8; j++) {
             //Here i need to check if the relevant bit is set
-            if ((spriteData[i] & (0x80 >> j)) == 1) {
-              if (videoDisplay[xpos + i + (ypos + j) * 64] == 1) {
+            if ((spriteData[i] & (0x80 >> j)) != 0) {
+              console.log(`${xpos + i + ((ypos + j) * 64)}`)
+              if (videoDisplay[xpos + i + ((ypos + j) * 64)] == 1) {
                 //An erase will happen
                 Vregisters[0xf] = 1;
               }
               //flip the bit
-              videoDisplay[xpos + i + (ypos + j) * 64] ^= 1;
+              videoDisplay[xpos + i + ((ypos + j) * 64)] ^= 1;
             }
           }
         }
@@ -492,8 +501,7 @@ function emulateCycle() {
               programCounter += 2;
             }
             break;
-          case 0x0055: //I is set to I + X + 1 after operation //FX55:	Store the values of registers V0 to VX inclusive in memory starting at address I
-          {
+          case 0x0055: { //I is set to I + X + 1 after operation //FX55:	Store the values of registers V0 to VX inclusive in memory starting at address I
             let endPoint = (opcode & 0x0f00) >> 8;
             for (let i = 0; i < endPoint; i++) {
               memory[indexRegister + i] = Vregisters[i];
@@ -501,6 +509,7 @@ function emulateCycle() {
             indexRegister += endPoint + 1;
             programCounter += 2;
           }
+            break;
           case 0x0065: //FX65: Fill registers V0 to VX inclusive with the values stored in memory starting at address I
             //I is set to I + X + 1 after operation
             {
@@ -531,7 +540,7 @@ function emulateCycle() {
     // More opcodes //
 
     default:
-      printf("Unknown opcode: 0x%X\n", opcode);
+      console.log("Unknown opcode:");//" 0x%X\n", opcode);
   }
 
   // Update timers
@@ -545,8 +554,8 @@ function setupGraphics() {}
 function setupControls() {}
 
 function main() {
-  getRom().then(() => {
-    console.log("Rom loaded");
+  getRom().then(blob => {
+    dowork(blob);
   });
 
   document.addEventListener(
@@ -570,4 +579,22 @@ function main() {
     },
     false
   );
+}
+
+function dowork(blob) {
+  
+  romCode = new Uint8Array(blob);
+  wideRom = new Uint16Array(blob);
+  console.log(romCode);
+  for (let i = 0; i < romCode.length; i++) {
+    memory[i + 0x200] = romCode[i];
+  }
+  programCounter = 0x200;
+}
+
+function runALoop()
+{
+  emulateCycle();
+  console.log(Vregisters);
+  console.log(programCounter);
 }
