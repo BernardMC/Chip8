@@ -134,7 +134,7 @@ let keyMap = {
 
 async function getRom() {
   const response = await fetch(
-    "https://cdn.glitch.com/1749964c-1292-4b7b-9396-0fb906858f51%2FChip8%20emulator%20Logo%20%5BGarstyciuks%5D.ch8?v=1590012730017"
+    "https://cdn.glitch.com/1749964c-1292-4b7b-9396-0fb906858f51%2FIBM%20Logo.ch8"
   );
   const blob = await response.blob();
   return await new Response(blob).arrayBuffer();
@@ -206,7 +206,7 @@ function emulateCycle() {
     // Some opcodes //
     case 0x0000:
       {
-        switch (opcode & 0x000f) {
+        switch (opcode & 0x00ff) {
           case 0x000e: //00EE:	Return from a subroutine
             {
               stackPointer -= 1;
@@ -214,6 +214,11 @@ function emulateCycle() {
               programCounter += 2;
             }
             break;
+          case 0x00e0: //00E0: Clear screen
+          {
+            videoDisplay.fill(0)
+            programCounter += 2;
+          }
         }
       }
       break;
@@ -586,6 +591,7 @@ function dowork(blob) {
   romCode = new Uint8Array(blob);
   wideRom = new Uint16Array(blob);
   console.log(romCode);
+  initialize()
   for (let i = 0; i < romCode.length; i++) {
     memory[i + 0x200] = romCode[i];
   }
@@ -597,4 +603,54 @@ function runALoop()
   emulateCycle();
   console.log(Vregisters);
   console.log(programCounter);
+}
+
+let ok = new Uint8ClampedArray(64*32*4);
+
+function renderScreen()
+{
+  let w = 64;
+  let h = 32;
+  let ctx = canvas.getContext("2d");
+  canvas.width = w;
+  canvas.height = h;
+  for (let i = 0; i < 64*32; i++)
+  {
+    let fill = 0;
+    if(videoDisplay[i] == 1)
+    {
+      fill = 255;
+    }
+    let red = i * 4;
+    let green = ++red;
+    let blue = ++green;
+    let alpha = ++blue;
+
+    
+    ok[red] = 255;
+    ok[green] = 0;
+    ok[blue] = 0;
+    ok[alpha] = 255;
+   // }
+   // else
+   // {
+   // ok[red] = 0;
+   // ok[green] = fill;
+   // ok[blue] = 0;
+   // ok[alpha] = 255;
+   // }
+  }
+  var image2 = ctx.getImageData(0, 0, w, h);
+  image2.data.set(ok);
+  ctx.putImageData(image2,0,0);
+  let bigger = document.getElementsByTagName("canvas")[1];
+  let otherCtx = bigger.getContext("2d");
+  otherCtx.drawImage(ctx.canvas, 0, 0,600,600);
+  //ctx.scale(10,10);
+  //canvas.width = 640;
+  //canvas.height = 320;
+  //let big = document.getElementById("canvas2");
+  //let bigctx = big.getContext("2d");
+  //bigctx.drawImage(image2, 0, 0, 640, 329);
+
 }
