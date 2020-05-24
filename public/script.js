@@ -133,22 +133,18 @@ let keyMap = {
   0xf: "v"
 };
 
-function addToPointer(pointer , value)
-{
-  if((pointer + value) > 0xFFF)
-  {
-    pointer = (pointer + value) - 0xFFF - 1;
+function addToPointer(pointer, value) {
+  if (pointer + value > 0xfff) {
+    pointer = pointer + value - 0xfff - 1;
     return pointer;
   }
   pointer += value;
   return pointer;
 }
 
-function subFromProgramCounter(value)
-{
-  if ((programCounter - value) < 0)
-  {
-    programCounter = 0xFFF + (programCounter - value);
+function subFromProgramCounter(value) {
+  if (programCounter - value < 0) {
+    programCounter = 0xfff + (programCounter - value);
     return;
   }
   programCounter -= value;
@@ -235,14 +231,13 @@ function emulateCycle() {
         switch (opcode & 0x00ff) {
           case 0x00ee: //00EE:	Return from a subroutine
             {
-              stackPointer = stackPointer -1;
+              stackPointer = stackPointer - 1;
               programCounter = stack[stackPointer];
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-          case 0x00e0: //00E0: Clear screen
-          {
-            videoDisplay.fill(0)
+          case 0x00e0: { //00E0: Clear screen
+            videoDisplay.fill(0);
             programCounter = addToPointer(programCounter, 2);
             drawFlag = true;
           }
@@ -251,7 +246,7 @@ function emulateCycle() {
       break;
     case 0x1000: //1NNN:	Jump to address NNN
       {
-        programCounter = (opcode & 0x0fff);
+        programCounter = opcode & 0x0fff;
       }
       break;
     case 0x2000: //2NNN:	Execute subroutine starting at address NNN
@@ -272,8 +267,7 @@ function emulateCycle() {
       break;
     case 0x4000: // 4XNN:	Skip the following instruction if the value of register VX is not equal to NN
       {
-        if(Vregisters[VX] != (opcode & 0x00FF))
-        {
+        if (Vregisters[VX] != (opcode & 0x00ff)) {
           programCounter = addToPointer(programCounter, 4);
         } else {
           programCounter = addToPointer(programCounter, 2);
@@ -282,113 +276,106 @@ function emulateCycle() {
       break;
     case 0x5000: // 5XY0:	Skip the following instruction if the value of register VX is equal to the value of register VY
       {
-        if (Vregisters[VX] == Vregisters[VY])
-        {
+        if (Vregisters[VX] == Vregisters[VY]) {
           programCounter = addToPointer(programCounter, 4);
         } else {
           programCounter = addToPointer(programCounter, 2);
         }
       }
       break;
-      case 0x6000:  // 6XNN: Store number NN in register VX
+    case 0x6000: // 6XNN: Store number NN in register VX
       {
         Vregisters[VX] = opcode & 0x00ff;
         programCounter = addToPointer(programCounter, 2);
       }
       break;
-      case 0x7000:
+    case 0x7000:
       {
         // 7XNN: Add the value NN to register VX
-        Vregisters[VX] += (opcode & 0x00ff);
+        Vregisters[VX] += opcode & 0x00ff;
         programCounter = addToPointer(programCounter, 2);
       }
       break;
-      case 0x8000: // registry ops
-        {
-          switch (opcode & 0x000f) {
-            case 0x0000:
-              {
-                Vregisters[VX] = Vregisters[VY];
-                programCounter = addToPointer(programCounter, 2);
-              }
-              break;
-            case 0x0001: //8XY1:	Set VX to VX OR VY
+    case 0x8000: // registry ops
+      {
+        switch (opcode & 0x000f) {
+          case 0x0000:
             {
-              Vregisters[VX] =
-                Vregisters[VX] |
-                Vregisters[VY];
+              Vregisters[VX] = Vregisters[VY];
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-            case 0x0002: //8XY2:	Set VX to VX AND VY
+          case 0x0001: //8XY1:	Set VX to VX OR VY
             {
-              Vregisters[VX] = (Vregisters[VX] & Vregisters[VY]);
+              Vregisters[VX] = Vregisters[VX] | Vregisters[VY];
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-            case 0x0003: //8XY3:	Set VX to VX XOR VY
+          case 0x0002: //8XY2:	Set VX to VX AND VY
             {
-              Vregisters[VX] = (Vregisters[VX] ^ Vregisters[VY]);
+              Vregisters[VX] = Vregisters[VX] & Vregisters[VY];
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-            case 0x0004:
-              {
-                if (Vregisters[VY] > 0xff - Vregisters[VX]) 
-                {
-                  Vregisters[0xf] = 1; //carry
-                } else {
-                  Vregisters[0xf] = 0;
-                }
-                Vregisters[VX] += Vregisters[VY];
-                programCounter = addToPointer(programCounter, 2);
+          case 0x0003: //8XY3:	Set VX to VX XOR VY
+            {
+              Vregisters[VX] = Vregisters[VX] ^ Vregisters[VY];
+              programCounter = addToPointer(programCounter, 2);
+            }
+            break;
+          case 0x0004:
+            {
+              if (Vregisters[VY] > 0xff - Vregisters[VX]) {
+                Vregisters[0xf] = 1; //carry
+              } else {
+                Vregisters[0xf] = 0;
               }
-              break;
-            case 0x0005: //8XY5	Subtract the value of register VY from register VX
-              {
-                if (Vregisters[VY] > Vregisters[VX]) 
-                {
-                  Vregisters[0xf] = 0; //borrow
-                } else {
-                  Vregisters[0xf] = 1;
-                }
-                Vregisters[VX] = Vregisters[VX] - Vregisters[VY];
-                programCounter = addToPointer(programCounter, 2);
+              Vregisters[VX] += Vregisters[VY];
+              programCounter = addToPointer(programCounter, 2);
+            }
+            break;
+          case 0x0005: //8XY5	Subtract the value of register VY from register VX
+            {
+              if (Vregisters[VY] > Vregisters[VX]) {
+                Vregisters[0xf] = 0; //borrow
+              } else {
+                Vregisters[0xf] = 1;
               }
-              break;
-            case 0x0006: //8XY6:    Store the value of register VY shifted right one bit in register VX
+              Vregisters[VX] = Vregisters[VX] - Vregisters[VY];
+              programCounter = addToPointer(programCounter, 2);
+            }
+            break;
+          case 0x0006: //8XY6:    Store the value of register VY shifted right one bit in register VX
             {
               Vregisters[0xf] = Vregisters[VY] & 1;
               Vregisters[VX] = Vregisters[VY] >> 1;
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-            case 0x0007: //8XY7: Set register VX to the value of VY minus VX
-              {
-                if (Vregisters[VY] > Vregisters[VX]) 
-                {
-                  Vregisters[0xf] = 1; //borrow
-                } else {
-                  Vregisters[0xf] = 0;
-                }
-                Vregisters[VX] = Vregisters[VY] - Vregisters[VX];
-                programCounter = addToPointer(programCounter, 2);
+          case 0x0007: //8XY7: Set register VX to the value of VY minus VX
+            {
+              if (Vregisters[VY] > Vregisters[VX]) {
+                Vregisters[0xf] = 1; //borrow
+              } else {
+                Vregisters[0xf] = 0;
               }
-              break;
-            case 0x000e: // 8XYE:	Store the value of register VY shifted left one bit in register VX
-              {
-                Vregisters[0xf] = Vregisters[VY] >> 7;
-                Vregisters[VX] = Vregisters[VY] << 1;
-                programCounter = addToPointer(programCounter, 2);
-              }
-              break;
-          }
+              Vregisters[VX] = Vregisters[VY] - Vregisters[VX];
+              programCounter = addToPointer(programCounter, 2);
+            }
+            break;
+          case 0x000e: // 8XYE:	Store the value of register VY shifted left one bit in register VX
+            {
+              Vregisters[0xf] = Vregisters[VY] >> 7;
+              Vregisters[VX] = Vregisters[VY] << 1;
+              programCounter = addToPointer(programCounter, 2);
+            }
+            break;
         }
-        break;
+      }
+      break;
     case 0x9000: // 9XY0:	Skip the following instruction if the value of register VX is not equal to the value of register VY
       {
-        if (Vregisters[VX] != Vregisters[VY]) 
-        {
+        if (Vregisters[VX] != Vregisters[VY]) {
           programCounter = addToPointer(programCounter, 4);
         } else {
           programCounter = addToPointer(programCounter, 2);
@@ -405,7 +392,10 @@ function emulateCycle() {
     case 0xb000: // BNNN:	Jump to address NNN + V0
       {
         programCounter = 0;
-        programCounter = addToPointer(programCounter, ((opcode & 0x0fff) + Vregisters[0]));
+        programCounter = addToPointer(
+          programCounter,
+          (opcode & 0x0fff) + Vregisters[0]
+        );
       }
       break;
     case 0xc000: // CXNN:	Set VX to a random number with a mask of NN
@@ -418,32 +408,28 @@ function emulateCycle() {
       //DXYN	Draw a sprite at position VX, VY with N bytes of sprite data starting at the address stored in I
       //Set VF to 01 if any set pixels are changed to unset, and 00 otherwise
       {
-      let x = Vregisters[VX];
-			let y = Vregisters[VY];
-			let height = opcode & 0x000F;
-			let pixel;
+        let x = Vregisters[VX];
+        let y = Vregisters[VY];
+        let height = opcode & 0x000f;
+        let pixel;
 
-			Vregisters[0xF] = 0;
-			for (let yline = 0; yline < height; yline++)
-			{
-				pixel = memory[indexRegister + yline];
-				for(let xline = 0; xline < 8; xline++)
-				{
-					if((pixel & (0x80 >> xline)) != 0)
-					{
-						if(videoDisplay[(x + xline + ((y + yline) * 64))] == 1)
-						{
-							Vregisters[0xF] = 1;                                    
-						}
-						videoDisplay[x + xline + ((y + yline) * 64)] ^= 1;
-					}
-				}
-			}
-						
-			drawFlag = true;			
-			programCounter = addToPointer(programCounter, 2);
+        Vregisters[0xf] = 0;
+        for (let yline = 0; yline < height; yline++) {
+          pixel = memory[indexRegister + yline];
+          for (let xline = 0; xline < 8; xline++) {
+            if ((pixel & (0x80 >> xline)) != 0) {
+              if (videoDisplay[x + xline + (y + yline) * 64] == 1) {
+                Vregisters[0xf] = 1;
+              }
+              videoDisplay[x + xline + (y + yline) * 64] ^= 1;
+            }
+          }
+        }
+
+        drawFlag = true;
+        programCounter = addToPointer(programCounter, 2);
       }
-        break;
+      break;
     case 0xe000:
       {
         switch (opcode & 0x00ff) {
@@ -510,9 +496,9 @@ function emulateCycle() {
               for (let i = 0; i <= endPoint; i++) {
                 memory[indexRegister + i] = Vregisters[i];
               }
-            indexRegister = addToPointer(indexRegister, endPoint + 1);
-            programCounter = addToPointer(programCounter, 2);
-          }
+              indexRegister = addToPointer(indexRegister, endPoint + 1);
+              programCounter = addToPointer(programCounter, 2);
+            }
             break;
           case 0x0065: //FX65: Fill registers V0 to VX inclusive with the values stored in memory starting at address I
             //I is set to I + X + 1 after operation
@@ -533,27 +519,26 @@ function emulateCycle() {
             break;
           case 0x001e: // FX1E:	Add the value stored in register VX to register I
             {
-          if(indexRegister + Vregisters[VX] > 0xFFF)	// VF is set to 1 when range overflow (I+VX>0xFFF), and 0 when there isn't.
-					{
-            	Vregisters[0xF] = 1;
-          }else{
-            Vregisters[0xF] = 0;
-          }
-					indexRegister = addToPointer(indexRegister, Vregisters[VX]);
-					programCounter = addToPointer(programCounter, 2);
+              if (indexRegister + Vregisters[VX] > 0xfff) {
+                // VF is set to 1 when range overflow (I+VX>0xFFF), and 0 when there isn't.
+                Vregisters[0xf] = 1;
+              } else {
+                Vregisters[0xf] = 0;
+              }
+              indexRegister = addToPointer(indexRegister, Vregisters[VX]);
+              programCounter = addToPointer(programCounter, 2);
             }
             break;
         }
       }
       break;
     default:
-      console.log("Unknown opcode:");//" 0x%X\n", opcode);
+      console.log("Unknown opcode:"); //" 0x%X\n", opcode);
   }
 
   // Update timers
   updateTimers();
-  if (drawFlag)
-  {
+  if (drawFlag) {
     drawFlag = false;
   }
 }
@@ -590,44 +575,40 @@ function main() {
     },
     false
   );
-    initialize();
+  initialize();
   setInterval(() => {
     runALoop();
   }, 20);
 }
 
 function dowork(blob) {
-  
   romCode = new Uint8Array(blob);
   wideRom = new Uint16Array(blob);
   console.log(romCode);
-  initialize()
+  initialize();
   for (let i = 0; i < romCode.length; i++) {
     memory[i + 0x200] = romCode[i];
   }
   programCounter = 0x200;
 }
 
-function runALoop()
-{
+function runALoop() {
   emulateCycle();
   renderScreen();
 }
 
-let ok = new Uint8ClampedArray(64*32*4);
+let ok = new Uint8ClampedArray(64 * 32 * 4);
+let imageData;
 
-function renderScreen()
-{
+function renderScreen() {
   let w = 64;
   let h = 32;
   let ctx = canvas.getContext("2d");
   canvas.width = w;
   canvas.height = h;
-  for (let i = 0; i < 64*32; i++)
-  {
+  for (let i = 0; i < 64 * 32; i++) {
     let fill = 0;
-    if(videoDisplay[i] == 1)
-    {
+    if (videoDisplay[i] == 1) {
       fill = 255;
     }
     let red = i * 4;
@@ -635,7 +616,6 @@ function renderScreen()
     let blue = ++green;
     let alpha = ++blue;
 
-    
     ok[red] = fill;
     ok[green] = fill;
     ok[blue] = fill;
@@ -644,9 +624,43 @@ function renderScreen()
 
   var image2 = ctx.getImageData(0, 0, w, h);
   image2.data.set(ok);
-  ctx.putImageData(image2,0,0);
+  ctx.putImageData(image2, 0, 0);
   let bigger = document.getElementsByTagName("canvas")[1];
+  bigger.w = 640;
+  bigger.h = 320;
   let otherCtx = bigger.getContext("2d");
-  otherCtx.drawImage(ctx.canvas, 0, 0,640,320);
-}
+  //otherCtx.drawImage(ctx.canvas, 0, 0,640,320);
+  imageData = new Uint8ClampedArray(640 * 320 * 4);
+  imageData.fill(0);
+  for (let index = 3; index <= 640 * 320 * 4; index += 4) {
+    imageData[index] = 255;
+  }
 
+  for (let index = 0; index <= ok.length; index += 4) {
+    let memory = ok.slice(index, index + 4);
+    //for (let ysection = 0; ysection <= 10; ysection++) {
+      let ysection = 0;
+      for (let subsection = 0; subsection <= 40; subsection += 4) {
+        let startpoint = (index * 10) + (ysection * 640) + subsection;
+        imageData.set(memory, startpoint);
+      }
+    //}
+  }
+  
+ // for (let y = 0; y <= 32; y++)
+ //   {
+ //     for (let x = 0; x <= 64; y++)
+ //       {
+ //         let startPoint = (x + y*64)*4;
+ //         let memory = ok.slice(startPoint, startPoint+4);
+ //         for (let i = 0; i < 10; i++)
+ //           {
+ //             let newPoint = ((x + i)*10) + y + 
+ //           }
+ //       }
+ //   }
+
+  let imageInitialData = otherCtx.getImageData(0, 0, 640, 320);
+  imageInitialData.data.set(imageData);
+  otherCtx.putImageData(imageInitialData, 0, 0);
+}
