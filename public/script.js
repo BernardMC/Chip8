@@ -554,7 +554,6 @@ function emulateCycle() {
   updateTimers();
   if (drawFlag)
   {
-    renderScreen();
     drawFlag = false;
   }
 }
@@ -593,7 +592,7 @@ function main() {
   );
     initialize();
   setInterval(() => {
-    emulateCycle();
+    runALoop();
   }, 20);
 }
 
@@ -612,8 +611,7 @@ function dowork(blob) {
 function runALoop()
 {
   emulateCycle();
-  console.log(Vregisters);
-  console.log(programCounter);
+  renderScreen();
 }
 
 let ok = new Uint8ClampedArray(64*32*4);
