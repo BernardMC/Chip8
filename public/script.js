@@ -236,7 +236,8 @@ function emulateCycle() {
               programCounter = addToPointer(programCounter, 2);
             }
             break;
-          case 0x00e0: { //00E0: Clear screen
+          case 0x00e0: {
+            //00E0: Clear screen
             videoDisplay.fill(0);
             programCounter = addToPointer(programCounter, 2);
             drawFlag = true;
@@ -598,69 +599,42 @@ function runALoop() {
 }
 
 let ok = new Uint8ClampedArray(64 * 32 * 4);
-let imageData;
+let displayData = new Uint8ClampedArray(640 * 320 * 4);
+let bright = new Uint8ClampedArray(40);
+bright.fill(255);
+let dark = new Uint8ClampedArray(40);
+let black = new Uint8ClampedArray([0, 0, 0, 255]);
+for (let p = 0; p < dark.length; p += 4) {
+  dark.set(black, p);
+}
+displayData.fill(0);
+let lineLength = 640 * 4;
 
 function renderScreen() {
   let w = 64;
   let h = 32;
-  let ctx = canvas.getContext("2d");
-  canvas.width = w;
-  canvas.height = h;
-  for (let i = 0; i < 64 * 32; i++) {
-    let fill = 0;
-    if (videoDisplay[i] == 1) {
-      fill = 255;
-    }
-    let red = i * 4;
-    let green = ++red;
-    let blue = ++green;
-    let alpha = ++blue;
-
-    ok[red] = fill;
-    ok[green] = fill;
-    ok[blue] = fill;
-    ok[alpha] = 255;
-  }
-
-  var image2 = ctx.getImageData(0, 0, w, h);
-  image2.data.set(ok);
-  ctx.putImageData(image2, 0, 0);
-  let bigger = document.getElementsByTagName("canvas")[1];
-  bigger.w = 640;
-  bigger.h = 320;
-  let otherCtx = bigger.getContext("2d");
-  //otherCtx.drawImage(ctx.canvas, 0, 0,640,320);
-  imageData = new Uint8ClampedArray(640 * 320 * 4);
-  imageData.fill(0);
-  for (let index = 3; index <= 640 * 320 * 4; index += 4) {
-    imageData[index] = 255;
-  }
-
-  for (let index = 0; index <= ok.length; index += 4) {
-    let memory = ok.slice(index, index + 4);
-    //for (let ysection = 0; ysection <= 10; ysection++) {
-      let ysection = 0;
-      for (let subsection = 0; subsection <= 40; subsection += 4) {
-        let startpoint = (index * 10) + (ysection * 640) + subsection;
-        imageData.set(memory, startpoint);
+  let bigindex = 0;
+  for (let y = 0; y < 32; y++) {
+    for (let x = 0; x < 64; x++) {
+      let i = (64*y) + x;
+      let fill = dark;
+      if (videoDisplay[i] == 1) {
+        fill = bright;
       }
-    //}
+      displayData.set(fill, bigindex);
+      bigindex += 40;
+    }
+    let previousData = displayData.slice(bigindex - lineLength, bigindex)
+    for (let m = 0; m < 9; m++)
+      {
+        displayData.set(previousData, bigindex)
+        bigindex = bigindex + lineLength;
+      }
   }
-  
- // for (let y = 0; y <= 32; y++)
- //   {
- //     for (let x = 0; x <= 64; y++)
- //       {
- //         let startPoint = (x + y*64)*4;
- //         let memory = ok.slice(startPoint, startPoint+4);
- //         for (let i = 0; i < 10; i++)
- //           {
- //             let newPoint = ((x + i)*10) + y + 
- //           }
- //       }
- //   }
 
-  let imageInitialData = otherCtx.getImageData(0, 0, 640, 320);
-  imageInitialData.data.set(imageData);
-  otherCtx.putImageData(imageInitialData, 0, 0);
+  let canvas = document.getElementById("canvas");
+  let ctx = canvas.getContext("2d");
+  let imageData = ctx.getImageData(0, 0, 640, 320);
+  imageData.data.set(displayData);
+  ctx.putImageData(imageData, 0, 0);
 }
