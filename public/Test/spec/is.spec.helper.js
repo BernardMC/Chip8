@@ -413,6 +413,7 @@
                     delayTimer = params.dt;
                 },
                 postFn: function () {
+                    updateTimers()
                     expect(Vregisters[params.x]).toEqual(params.dt);
                     expect(delayTimer).toEqual((params.dt - 1) & 0xFF);
                     expect(programCounter).toEqual((this.oldPc + 2) & 0x0FFF);
@@ -429,6 +430,7 @@
                     Vregisters[params.x] = params.xVal;
                 },
                 postFn: function () {
+                    updateTimers()
                     expect(Vregisters[params.x]).toEqual(params.xVal);
                     expect(delayTimer).toEqual((params.xVal - 1) & 0xFF);
                     expect(programCounter).toEqual((this.oldPc + 2) & 0x0FFF);
@@ -445,6 +447,7 @@
                     Vregisters[params.x] = params.xVal;
                 },
                 postFn: function () {
+                    updateTimers();
                     expect(Vregisters[params.x]).toEqual(params.xVal);
                     expect(soundTimer).toEqual((params.xVal - 1) & 0xFF);
                     expect(programCounter).toEqual((this.oldPc + 2) & 0x0FFF);
@@ -526,16 +529,19 @@
             });
         },
 
-
+*/
         test_SKP_Vx: function (params) {
             testCycle({
                 opCode: 0xE09E | (params.x << 8),
                 op: 'SKP_Vx',
                 args: [ params.x ],
-                preFn: function () {
+                preFn: function () 
+              {
+                  
                     Vregisters[params.x] = params.xVal;
-                    if (params.pressed) {
-                        cpu.keyboard.keyDown(params.key);
+                    if (params.pressed) 
+                    {
+                      keysPressed[keyMap[params.key]] = true;
                     }
                 },
                 postFn: function () {
@@ -556,7 +562,7 @@
                 preFn: function () {
                     Vregisters[params.x] = params.xVal;
                     if (params.pressed) {
-                        cpu.keyboard.keyDown(params.key);
+                        keysPressed[keyMap[params.key]] = true;
                     }
                 },
                 postFn: function () {
@@ -568,7 +574,7 @@
                 }
             });
         },
-*/
+      
         test_LD_F_Vx: function (params) {
             testCycle({
                 opCode: 0xF029 | (params.x << 8),

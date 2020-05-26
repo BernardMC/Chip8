@@ -243,7 +243,7 @@ describe('Instruction set', function () {
     it('LD Vx, K', function () {
         helpers.test_LD_Vx_K({ x: 0x5, key: chip8.Keyboard.CHIP8_KEYS.KEY_6 });
     });
-
+*/
     
 
     // SKP Vx: 0xEx9E
@@ -259,7 +259,7 @@ describe('Instruction set', function () {
         helpers.test_SKNP_Vx({ x: 0x6, xVal: 0xB, pressed: true, key: 0xA, shouldSkip: true });
         helpers.test_SKNP_Vx({ x: 0x6, xVal: 0xB, pressed: true, key: 0xB, shouldSkip: false });
     });
-*/
+
     // LD F, Vx: 0xFx29
     it('LD F, Vx', function () {
         helpers.test_LD_F_Vx({ x: 0x0, xVal: 0x0, i: 0x0 });
