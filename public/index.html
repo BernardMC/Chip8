@@ -2,18 +2,49 @@
 <head>
   <script src="script.js"></script>
   <script src="scratch.js"></script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body onload="main()">
-  <h2>WIP</h2>
+  <h2 align="center">CHIP 8</h2>
   <a href="Test/Tests.html">Tests</a>
   <p>
     Blended image<br />
+    <p align="center">
     <canvas
       id="canvas"
       width="640"
       ,
       height="320"
-      style="border:1px solid;"
+      style="border:10px solid; border-style: outset; border-color : grey"
     ></canvas>
+  </p>
+  
+<div class="keypad" align="center">
+    <div class="btn-row">
+        <button type="button" class="keypadButton" onmousedown=keypadClick("1") onmouseup=keypadReleased("1")>1</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("2") onmouseup=keypadReleased("2")>2</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("3") onmouseup=keypadReleased("3")>3</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("4") onmouseup=keypadReleased("4")>4</button>
+    </div>
+    <div class="btn-row">
+        <button type="button" class="keypadButton" onmousedown=keypadClick("q") onmouseup=keypadReleased("q")>Q</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("w") onmouseup=keypadReleased("w")>W</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("e") onmouseup=keypadReleased("e")>E</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("r") onmouseup=keypadReleased("r")>R</button>
+    </div>
+    <div class="btn-row">
+        <button type="button" class="keypadButton" onmousedown=keypadClick("a") onmouseup=keypadReleased("a")>A</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("s") onmouseup=keypadReleased("s")>S</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("d") onmouseup=keypadReleased("d")>D</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("f") onmouseup=keypadReleased("f")>F</button>
+    </div>
+      <div class="btn-row">
+        <button type="button" class="keypadButton" onmousedown=keypadClick("z") onmouseup=keypadReleased("z")>Z</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("x") onmouseup=keypadReleased("x")>X</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("c") onmouseup=keypadReleased("c")>C</button>
+        <button type="button" class="keypadButton" onmousedown=keypadClick("v") onmouseup=keypadReleased("v")>V</button>
+    </div>
+  
+</div>
   </p>
 </body>

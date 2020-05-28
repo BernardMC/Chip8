@@ -659,3 +659,21 @@ function renderScreen() {
   imageData.data.set(displayData);
   ctx.putImageData(imageData, 0, 0);
 }
+
+function keypadClick(pressed)
+{
+  const keyName = pressed;
+      if (keyName in keysPressed) {
+        keysPressed[keyName] = true;
+      }
+      console.log(keysPressed[keyName])
+}
+
+function keypadReleased(released)
+{
+  const keyName = released;
+      if (keyName in keysPressed) {
+        keysPressed[keyName] = false;
+      }
+      console.log(keysPressed[keyName])
+}
