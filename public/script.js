@@ -163,6 +163,12 @@ async function getRom() {
   return await new Response(blob).arrayBuffer();
 }
 
+async function loadRom(url){
+  const response = await fetch(url);
+  const blob = await response.blob();
+  return await new Response(blob).arrayBuffer();
+}
+
 function checkIsKeyPresses(key) {
   return keysPressed[keyMap[key]];
 }

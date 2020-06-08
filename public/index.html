@@ -18,6 +18,28 @@
       style="border:10px solid; border-style: outset; border-color : grey"
     ></canvas>
   </p>
+
+<div class="GameList", id="ListOGames">
+  <script>
+    let parentCtrl = document.getElementById("ListOGames");
+    console.log(parentCtrl)
+    for (item in GameTitles)
+    {
+      //console.log(GameTitles[item]);
+      let button = document.createElement("button");
+      button.innerHTML = item;
+      parentCtrl.appendChild(button)
+      button.addEventListener ("click", function() {
+        console.log(this)
+        let name = this.innerHTML;
+        let title = GameTitles[name];
+        loadRom(title).then(blob => {
+        dowork(blob);
+      });
+      })
+    }
+  </script>
+</div>
   
 <div class="keypad" align="center">
     <div class="btn-row">
