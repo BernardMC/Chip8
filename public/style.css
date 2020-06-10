@@ -79,3 +79,12 @@ footer {
 
 .keypad {
 }
+
+.GameList{
+  background-color: blue;
+  float: left;
+}
+
+.Game{
+  width: 100px;
+}
